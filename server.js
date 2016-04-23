@@ -1,5 +1,9 @@
 var ALL_VISITS_SQL = 'SELECT v.id, v.patient_id AS patientId, v.visit_type_id AS visitTypeId, v.bill, v.date, vt.display_name AS visitType FROM visits v JOIN visit_types vt ON v.visit_type_id = vt.id';
+var DEFAULT_VISITS_ORDER = ' ORDER BY v.date';
+
 var ALL_PATIENTS_SQL = 'SELECT p.id, p.name, p.surname, p.patronymic, p.birthDate, p.source_id AS sourceId, p.phone, p.email, s.display_name AS source FROM patients p JOIN sources s ON p.source_id = s.id';
+var DEFAULT_PATIENTS_ORDER = 'ORDER by p.id'
+
 var ALL_SOURCES_SQL = 'SELECT id, display_name AS displayName FROM sources';
 var ALL_VISIT_TYPES_SQL = 'SELECT id, display_name AS displayName FROM visit_types';
 
@@ -41,7 +45,8 @@ app.get('/rest/visitTypes', getAllVisitTypes);
 
 // PATIENTS controller
 function getAllPatients(req, res) {
-  db.all(ALL_PATIENTS_SQL, function(err, rows) {
+  var sql = ALL_PATIENTS_SQL + DEFAULT_PATIENTS_ORDER;
+  db.all(sql, function(err, rows) {
     if(req.query.sourceId) {
       sources = _.map(req.query.sourceId.split(','), function (sId) {return parseInt(sId, 10);});
       console.log(sources);
@@ -51,14 +56,26 @@ function getAllPatients(req, res) {
   });
 }
 function getPatientById(req, res) {
-  var patientId = req.params.id;
-  db.all(ALL_PATIENTS_SQL + ' WHERE p.id = ' + patientId, function(err, rows) {
+  var params = [req.params.id];
+  var sql = ALL_PATIENTS_SQL + ' WHERE p.id = ?';
+  sql = sql + DEFAULT_PATIENTS_ORDER;
+  db.all(sql, params, function(err, rows) {
     returnWithChecking(res, err, rows);
   });
 }
 function getPatientVisits(req, res) {
-  var patientId = req.params.id;
-  db.all(ALL_VISITS_SQL + ' WHERE v.patient_id = ' + patientId, function(err, rows) {
+  var params = [req.params.id];
+  var sql = ALL_VISITS_SQL + ' WHERE v.patient_id = ?';
+  if (req.query.dateFrom) {
+    sql = sql + ' AND date >= ?';
+    params.push(req.query.dateFrom);
+  }
+  if (req.query.dateTo) {
+    sql = sql + ' AND date <= ?';
+    params.push(req.query.dateTo);
+  }
+  sql = sql + DEFAULT_VISITS_ORDER;
+  db.all(sql, params, function(err, rows) {
     returnWithChecking(res, err, rows);
   });
 }
@@ -66,13 +83,16 @@ function getPatientVisits(req, res) {
 
 // VISITS controller
 function getAllVisits(req, res) {
-  db.all(ALL_VISITS_SQL, function(err, rows) {
+  var sql = ALL_VISITS_SQL + DEFAULT_VISITS_ORDER;
+  db.all(sql, function(err, rows) {
     returnWithChecking(res, err, rows);
   });
 }
 function getVisitById(req, res) {
-  var visitId = req.params.id;
-  db.all(ALL_VISITS_SQL + ' WHERE v.id = ' + visitId, function(err, rows) {
+  var params = [req.params.id];
+  var sql = ALL_VISITS_SQL + ' WHERE v.id = ?';
+  sql = sql + DEFAULT_VISITS_ORDER;
+  db.all(sql, params, function(err, rows) {
     returnWithChecking(res, err, rows);
   });
 }
