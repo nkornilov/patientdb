@@ -18,6 +18,7 @@
   "homepage": "https://github.com/own-wave/patientdb#readme",
   "devDependencies": {
     "express": "^4.13.4",
-    "require": "^2.4.20"
+    "require": "^2.4.20",
+    "sqlite": "0.0.4"
   }
 }
